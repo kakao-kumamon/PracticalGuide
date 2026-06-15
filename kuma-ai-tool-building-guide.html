@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐻 AI로 작은 도구 만들기 — 플러그인·그래픽 제너레이터 실전 노하우</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Segoe UI", sans-serif;
+    background: #fafaf7;
+    color: #1a1a1a;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  header.cover {
+    border-left: 4px solid #c97a3a;
+    padding-left: 20px;
+    margin-bottom: 48px;
+  }
+  header.cover .eyebrow {
+    color: #888;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  header.cover h1 {
+    font-size: 30px;
+    line-height: 1.3;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  header.cover .tagline {
+    color: #555;
+    font-size: 16px;
+    margin: 0;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 56px 0 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e7e3da;
+    font-weight: 700;
+    color: #2a2a2a;
+  }
+  h3 {
+    font-size: 17px;
+    margin: 32px 0 10px;
+    font-weight: 600;
+    color: #c97a3a;
+  }
+  h4 {
+    font-size: 15px;
+    margin: 20px 0 6px;
+    font-weight: 600;
+    color: #444;
+  }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li > ul, li > ol { margin-top: 6px; }
+  code {
+    background: #f1ede4;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 13px;
+    color: #b04a1f;
+  }
+  pre {
+    background: #2b2a26;
+    color: #e8e4d8;
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 12px 0 20px;
+  }
+  pre code { background: transparent; color: inherit; padding: 0; }
+  blockquote {
+    border-left: 3px solid #c97a3a;
+    background: #fdf6ec;
+    padding: 12px 18px;
+    margin: 16px 0;
+    color: #3a2e1f;
+    border-radius: 0 6px 6px 0;
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+  .callout {
+    background: #f4f1ea;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .callout .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #c97a3a;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .callout.warn { background: #fbeee5; }
+  .callout.warn .label { color: #b04a1f; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e7e3da;
+    vertical-align: top;
+  }
+  th {
+    background: #f4f1ea;
+    font-weight: 600;
+  }
+  .pill {
+    display: inline-block;
+    background: #fdf6ec;
+    color: #b04a1f;
+    border: 1px solid #e8d3b8;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .toc {
+    background: #f4f1ea;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 40px;
+  }
+  .toc h2 {
+    border: none;
+    padding: 0;
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .toc a {
+    color: #2a2a2a;
+    text-decoration: none;
+  }
+  .toc a:hover { color: #c97a3a; }
+  footer.end {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid #e7e3da;
+    color: #888;
+    font-size: 13px;
+    text-align: center;
+  }
+  .checklist li::marker { content: "☐  "; }
+  .keyrow {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px 16px;
+    margin: 8px 0 16px;
+    font-size: 14px;
+  }
+  .keyrow dt { font-weight: 600; color: #555; }
+  .keyrow dd { margin: 0; }
+  hr.soft {
+    border: none;
+    border-top: 1px dashed #d8d3c6;
+    margin: 28px 0;
+  }
+  @media print {
+    body { background: white; }
+    .wrap { padding: 0; max-width: 100%; }
+    h2 { page-break-after: avoid; }
+    pre { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">Practical Guide · 2026</div>
+  <h1>🐻 AI로 작은 도구 만들기<br>플러그인·그래픽 제너레이터 실전 노하우</h1>
+  <p class="tagline">Claude·Codex 같은 코딩 AI를 활용해 "쓸모 있는 작은 툴"을 빠르게 만드는 워크플로우와 프롬프트 패턴</p>
+</header>
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#why">0. 시작하기 전에 — 이 가이드가 답하려는 것</a></li>
+    <li><a href="#mental">1. 멘탈 모델: AI는 "주니어 동료"다</a></li>
+    <li><a href="#workflow">2. 4단계 워크플로우 — 기획→설계→구현→검증</a></li>
+    <li><a href="#prompt">3. 프롬프트 작성 패턴 7가지</a></li>
+    <li><a href="#example1">4. 실전 예시 ① 작은 플러그인 만들기</a></li>
+    <li><a href="#example2">5. 실전 예시 ② 그래픽 제너레이터 만들기</a></li>
+    <li><a href="#debug">6. AI가 헛다리 짚을 때 바로잡는 법</a></li>
+    <li><a href="#checklist">7. 체크리스트 — 출시 전 마지막 점검</a></li>
+  </ol>
+</nav>
+
+<section id="why">
+<h2>0. 시작하기 전에 — 이 가이드가 답하려는 것</h2>
+<p>요즘 Claude나 Codex 같은 AI에게 "버튼 하나 누르면 뭔가 만들어주는 도구"를 시켜본 사람이라면 한 번쯤 이런 경험을 해봤을 거다.</p>
+<ul>
+  <li>"플러그인 만들어줘" 한 줄에 코드는 잘 나오는데, 막상 돌려보면 안 된다</li>
+  <li>고치다 보면 처음 만든 구조가 깨져서 점점 누더기가 된다</li>
+  <li>그래픽 제너레이터를 만들었는데 결과물이 "AI가 만든 티"가 너무 난다</li>
+</ul>
+<p>이 가이드는 그 간극을 좁히려는 문서다. <strong>"한 번에 잘 시키는 법"</strong>이 아니라, <strong>"여러 번 돌리면서 점점 좋아지게 만드는 워크플로우"</strong>가 핵심이다.</p>
+<p>대상 독자는 코드를 약간 읽을 줄 알지만 직접 다 짜기는 부담스러운 사람—기획자, 디자이너, 개발 입문자, 또는 본업 외에 도구 하나 빠르게 만들고 싶은 누구나다.</p>
+</section>
+
+<section id="mental">
+<h2>1. 멘탈 모델: AI는 "주니어 동료"다</h2>
+<p>가장 큰 오해는 AI를 <em>마법 상자</em>로 보는 것이다. 사실 AI는 <strong>"빠르고 의욕 넘치지만 우리 프로젝트 맥락은 모르는 주니어 동료"</strong>에 가깝다. 이 멘탈 모델을 받아들이면 프롬프트 쓰는 방식이 자연스럽게 바뀐다.</p>
+
+<table>
+  <thead><tr><th>마법 상자 관점</th><th>주니어 동료 관점</th></tr></thead>
+  <tbody>
+    <tr><td>한 번에 완벽하게 시킨다</td><td>작업을 쪼개서 단계별로 시킨다</td></tr>
+    <tr><td>"플러그인 만들어줘"</td><td>"먼저 폴더 구조부터 잡자"</td></tr>
+    <tr><td>결과물을 그대로 쓴다</td><td>리뷰하고, 의도 다른 부분 지적하고, 다시 시킨다</td></tr>
+    <tr><td>실패하면 AI가 멍청하다고 생각</td><td>맥락을 덜 줬다고 생각하고 컨텍스트 보강</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <div class="label">핵심</div>
+  <p>AI에게 "맥락을 얼마나 잘 떠먹여 주느냐"가 결과물 품질의 80%를 결정한다. 나머지 20%가 모델·프롬프트 테크닉이다.</p>
+</div>
+</section>
+
+<section id="workflow">
+<h2>2. 4단계 워크플로우 — 기획→설계→구현→검증</h2>
+<p>한 번에 코드부터 시키지 말고, 다음 네 단계를 분리해서 진행하면 결과물이 눈에 띄게 안정적이 된다.</p>
+
+<h3>① 기획 (Spec)</h3>
+<p>"무엇을 만들지"를 먼저 글로 정리한다. AI에게 시키는 게 아니라 <strong>내가 직접</strong> 한 페이지 내외로 적는 단계다. 들어가야 할 항목:</p>
+<ul>
+  <li><strong>한 줄 목적</strong> — "이 도구는 ○○하는 사람을 위한 △△ 도구다"</li>
+  <li><strong>입력과 출력</strong> — 사용자가 뭘 넣고, 결과로 뭐가 나오나</li>
+  <li><strong>제약</strong> — 어디서 동작해야 하나(브라우저? 노션 플러그인? CLI?), 외부 API 쓰나</li>
+  <li><strong>안 할 것 (Non-goals)</strong> — 의외로 이게 가장 중요하다. AI가 과욕 부리는 걸 막아준다</li>
+</ul>
+
+<h3>② 설계 (Design)</h3>
+<p>이제 AI를 부른다. 단, 코드를 시키지 말고 <strong>설계 대화</strong>부터 한다.</p>
+<blockquote>
+<p>위의 스펙을 보고 다음을 답해줘:<br>
+1) 이걸 구현할 때 가장 적합한 기술 스택과 그 이유<br>
+2) 폴더/파일 구조 제안<br>
+3) 가장 위험한 가정이나 빠진 요구사항 3가지<br>
+4) MVP로 쪼갠다면 어떤 순서로 만들어야 하나</p>
+</blockquote>
+<p>여기서 AI가 짚어주는 "위험한 가정"이 진짜 보석이다. 종종 내가 놓친 케이스를 발견해준다.</p>
+
+<h3>③ 구현 (Build)</h3>
+<p>설계가 합의되면, 이제 작은 단위로 나눠서 시킨다. <strong>한 번에 한 파일</strong>, <strong>한 번에 한 기능</strong>이 원칙이다.</p>
+<ul>
+  <li>"먼저 색상 팔레트 추출 함수만 만들어줘. 입력은 이미지 파일 경로, 출력은 #hex 5개의 배열"</li>
+  <li>"그 함수를 쓰는 CLI 진입점을 만들어줘. argparse 쓰고 --output 옵션 추가"</li>
+</ul>
+<p>이렇게 쪼개야 (a) 어디서 깨졌는지 디버깅이 쉽고, (b) AI가 컨텍스트를 잃지 않는다.</p>
+
+<h3>④ 검증 (Verify)</h3>
+<p>AI가 "다 됐어요!"라고 해도 절대 그대로 넘기지 말 것. 최소 두 가지를 직접 한다.</p>
+<ol>
+  <li><strong>실제로 돌려본다.</strong> 데모 영상 만들 때처럼 처음부터 끝까지 시나리오를 따라간다.</li>
+  <li><strong>일부러 이상한 입력을 넣어본다.</strong> 빈 값, 너무 큰 값, 한글, 이모지, 공백 — AI가 짠 코드는 의외로 엣지 케이스에 약하다.</li>
+</ol>
+<div class="callout warn">
+  <div class="label">자주 하는 실수</div>
+  <p>"보기엔 맞아 보여서" 그대로 commit하는 것. 코드 리뷰처럼 한 줄씩 읽으면서 "왜 이걸 이렇게 했지?"를 물어봐야 한다. 모르겠으면 AI에게 그 줄을 지목해서 설명을 시켜라.</p>
+</div>
+</section>
+
+<section id="prompt">
+<h2>3. 프롬프트 작성 패턴 7가지</h2>
+<p>실전에서 반복적으로 효과를 봤던 패턴들이다. 외우기보단 "필요할 때 꺼내 쓸 수 있게" 익혀두자.</p>
+
+<h3>패턴 1 — 역할·맥락·목표·출력형식 (RGCO)</h3>
+<p>4가지 구획으로 정리하면 빈약한 프롬프트가 한 단계 좋아진다.</p>
+<pre><code>[역할] 너는 Vanilla JS로 작은 브라우저 도구를 만드는 시니어 프론트 개발자야.
+[맥락] 사내 디자이너들이 매주 SNS 카드 이미지 30장을 손으로 만들고 있어.
+        템플릿은 4가지뿐이고 텍스트만 바뀌어.
+[목표] CSV를 업로드하면 한 행당 PNG 한 장씩 자동 생성하는 페이지를 만들고 싶어.
+[출력형식] 단일 HTML 파일. 외부 의존성 없이 작동해야 함. 한국어 폰트는 시스템 폰트 fallback.</code></pre>
+
+<h3>패턴 2 — 거꾸로 시키기 (Show me what you'd ask)</h3>
+<p>스펙이 부족할 때 효과적이다.</p>
+<blockquote><p>이걸 구현하기 전에, 네가 나에게 물어봐야 할 결정적인 질문 5개를 먼저 알려줘. 코드는 아직 쓰지 마.</p></blockquote>
+<p>AI가 던지는 질문들이 곧 내 스펙의 빈틈이다.</p>
+
+<h3>패턴 3 — 비교 강제하기</h3>
+<p>AI는 첫 답에 만족시키도록 학습되어 있어서, 가만히 두면 그럴듯한 한 가지만 던진다. 강제로 대안을 만들게 하라.</p>
+<blockquote><p>접근법 3가지를 제시해줘. 각각 장단점과 언제 쓰는 게 좋은지. 그 다음 네 추천을 골라줘.</p></blockquote>
+
+<h3>패턴 4 — 의심 표현 받기</h3>
+<p>구현 후에 추가로 시킨다.</p>
+<blockquote><p>방금 짠 코드에서 (a) 가정이 깨질 수 있는 부분, (b) 사용자가 예상 못 할 동작, (c) 6개월 뒤 내가 가장 후회할 결정 — 이렇게 세 영역을 비판적으로 짚어줘.</p></blockquote>
+<p>이 한 마디가 코드 리뷰 한 사이클을 대신해준다.</p>
+
+<h3>패턴 5 — 예시로 가르치기 (Few-shot)</h3>
+<p>스타일·톤·포맷처럼 말로 설명하기 어려운 것은 예시 2~3개를 직접 보여주는 게 빠르다.</p>
+<pre><code>이런 톤으로 카피를 만들어줘:
+예시1: "오늘 안 사면 내일 더 비싸요" → 불안 + 짧은 문장
+예시2: "이거 하나면 끝" → 단순함 강조
+이제 카메라 광고 카피 5개 만들어줘.</code></pre>
+
+<h3>패턴 6 — 점진적 정제</h3>
+<p>한 방에 만족스러운 결과는 거의 없다. 다음 형식으로 이어간다.</p>
+<ul>
+  <li>"좋은데, X만 바꿔줘. 나머지는 유지."</li>
+  <li>"방금 버전이 더 나아. 이걸 기준으로 Y만 추가."</li>
+  <li>"두 버전을 합쳐줘. 첫 번째의 구조 + 두 번째의 색감."</li>
+</ul>
+<p>"나머지는 유지"라는 한 마디가 의외로 큰 힘을 발휘한다.</p>
+
+<h3>패턴 7 — 출력 컨테이너 지정</h3>
+<p>코드/문서를 받을 때는 어디에 넣을지를 미리 지정한다.</p>
+<blockquote><p>전체 파일을 <code>index.html</code> 한 덩어리로 줘. 부분 수정이면 변경된 함수만 따로 ```js 블록으로.</p></blockquote>
+</section>
+
+<section id="example1">
+<h2>4. 실전 예시 ① 작은 플러그인 만들기</h2>
+<p>예시 시나리오: <strong>"브라우저에서 보고 있는 페이지의 한국어 본문을 영어로 자동 번역해서 옆에 붙여주는 크롬 확장"</strong>을 만든다고 하자.</p>
+
+<h3>Step 1. 스펙 한 페이지</h3>
+<dl class="keyrow">
+  <dt>목적</dt><dd>한국어 뉴스를 빠르게 영어로 훑고 싶은 사람을 위한 인라인 번역 익스텐션</dd>
+  <dt>입력</dt><dd>현재 탭의 본문 텍스트 (article 태그 우선)</dd>
+  <dt>출력</dt><dd>원문 옆에 영어 번역 사이드패널</dd>
+  <dt>제약</dt><dd>Manifest V3, 번역 API는 사용자 개인 키, 페이지 1회당 호출 1번</dd>
+  <dt>안 할 것</dt><dd>로그인, 결제, 텍스트 외 콘텐츠(이미지/비디오) 처리</dd>
+</dl>
+
+<h3>Step 2. AI에게 설계 대화</h3>
+<pre><code>위 스펙으로 Manifest V3 크롬 확장을 만들 거야.
+1) 폴더 구조와 각 파일의 역할
+2) content script vs background service worker 어디서 뭘 할지
+3) API 키를 안전하게 저장하는 방법
+4) MVP로 쪼개면 어떤 순서로 만들지
+코드는 아직 쓰지 마. 위 4가지에 답만.</code></pre>
+<p>여기서 보통 AI가 chrome.storage 사용, manifest.json 권한 최소화 등 베이스라인 베스트프랙티스를 정리해준다. 이 답변을 그대로 README의 초안으로 저장해두면 나중에 다시 안 헤맨다.</p>
+
+<h3>Step 3. 한 파일씩 구현</h3>
+<ol>
+  <li><code>manifest.json</code>만 만들기 → 직접 chrome://extensions에 로드해보기</li>
+  <li>옵션 페이지(<code>options.html</code>)에서 API 키 저장만 동작 확인</li>
+  <li>content script로 본문 추출만 → console.log로 텍스트 잘 뽑히는지 확인</li>
+  <li>background에서 API 호출 + content로 결과 송출 → 그제야 사이드패널 UI 작성</li>
+</ol>
+<div class="callout">
+  <div class="label">핵심 포인트</div>
+  <p>각 단계에서 "여기까지 작동해야 하는데 안 된다"가 명확해진다. AI에게 디버깅을 시킬 때 "사이드패널이 안 떠"보다 "background → content message가 도착은 하는데 DOM 삽입 시점에 article이 아직 없는 듯"이라고 정확히 진단해주면 해결률이 크게 오른다.</p>
+</div>
+
+<h3>Step 4. 검증</h3>
+<p>실제로 자주 보는 사이트 5곳에서 돌려본다. 본문 추출 실패하는 사이트가 1~2곳은 반드시 나온다. 거기서 멈추지 말고 <em>구조가 다른 페이지</em>를 의도적으로 골라 테스트하는 게 핵심이다(예: 네이버 블로그, 미디엄, 노션 공개 페이지).</p>
+</section>
+
+<section id="example2">
+<h2>5. 실전 예시 ② 그래픽 제너레이터 만들기</h2>
+<p>예시 시나리오: <strong>"제목 + 짧은 설명을 입력하면 SNS용 1080x1080 카드 이미지를 PNG로 만들어주는 웹 도구"</strong>.</p>
+
+<h3>왜 그래픽 도구가 까다로운가</h3>
+<p>그래픽 제너레이터는 코드보단 <strong>"보기에 좋다"</strong>가 결정한다. 그래서 일반 도구보다 한 단계 더 챙겨야 할 게 있다.</p>
+<ul>
+  <li>AI가 만든 첫 디자인은 거의 항상 "AI가 만든 티"가 난다 → 폰트, 여백, 색이 평범하다</li>
+  <li>모듈화 없이 시키면 색·폰트·레이아웃이 한 덩어리로 묶여서 한 곳만 바꾸려 해도 다 깨진다</li>
+</ul>
+
+<h3>좋은 결과를 위한 5가지 처방</h3>
+
+<h4>① 디자인 토큰을 먼저 정의</h4>
+<p>코드 짜기 전에 "팔레트, 타이포 스케일, 그리드"부터 확정한다. 직접 결정 못 하겠으면 AI에게 "Behance에서 인기 있는 카드 디자인 5가지의 공통점 분석"을 시킨 다음, 그 위에 결정한다.</p>
+
+<h4>② 캔버스는 한 함수에서만 그리게</h4>
+<p>HTML/Canvas로 짤 때, "<code>render(state)</code> 함수 하나만 캔버스를 건드리고, 나머지는 state만 바꾼다" 규칙을 프롬프트에 명시하라. 안 하면 AI가 곳곳에서 ctx를 만지는 코드를 쓴다.</p>
+
+<h4>③ 폰트·여백을 변수화</h4>
+<pre><code>const T = {
+  font: { title: 'Pretendard', body: 'Pretendard' },
+  size: { title: 80, body: 32 },
+  pad: { x: 64, y: 80 }
+};</code></pre>
+<p>AI에게 "모든 수치는 T 객체를 통해서만 쓰고, 매직 넘버 금지"라고 못 박는다. 나중에 "전체적으로 좀 더 시원하게"라고만 시켜도 T값만 바뀌어서 깔끔하다.</p>
+
+<h4>④ 변형(Variants)을 분리</h4>
+<p>"기본 / 강조 / 인용" 같은 카드 종류는 함수가 아니라 <em>설정</em>으로 관리하라.</p>
+<pre><code>const variants = {
+  default: { bg: '#fafaf7', accent: '#c97a3a', align: 'left' },
+  emphasis: { bg: '#1a1a1a', accent: '#fdf6ec', align: 'center' },
+  quote:    { bg: '#fdf6ec', accent: '#1a1a1a', align: 'left' }
+};</code></pre>
+<p>새 변형 추가가 "객체 한 줄 추가"로 끝난다.</p>
+
+<h4>⑤ 미리보기와 결과물을 분리</h4>
+<p>실시간 미리보기는 빠르게(작은 캔버스), PNG 추출은 정확하게(원본 해상도). 한 캔버스로 두 마리 토끼 잡으려다 흐려진다.</p>
+
+<h3>점진적 개선 프롬프트 예시</h3>
+<blockquote>
+<p>좋아, 지금 카드 잘 나오는데 다음 두 가지만 고쳐줘:<br>
+1) 제목이 길 때 줄바꿈이 단어 중간에서 끊김 → 단어 단위 줄바꿈으로<br>
+2) 배경이 단색이라 단조로움 → variants에 'gradient' 추가, 다른 코드는 건드리지 마.<br>
+변경된 함수만 따로 보여줘.</p>
+</blockquote>
+</section>
+
+<section id="debug">
+<h2>6. AI가 헛다리 짚을 때 바로잡는 법</h2>
+
+<h3>증상별 처방전</h3>
+
+<table>
+  <thead><tr><th>증상</th><th>원인</th><th>처방</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>코드는 그럴듯한데 실행하면 ImportError·UndefinedError</td>
+      <td>존재하지 않는 라이브러리·API를 환각</td>
+      <td>"이 코드에서 실제로 import하거나 호출한 모든 외부 의존성을 표로 만들고, 각각 공식 문서 URL을 명시해줘. 모르면 모른다고 답해."</td>
+    </tr>
+    <tr>
+      <td>고치라고 시킬수록 더 망가진다</td>
+      <td>이전 컨텍스트가 너무 길어 스코프 잃음</td>
+      <td>새 대화 시작. 정리된 전체 코드 + 한 줄짜리 요청만 다시 줌.</td>
+    </tr>
+    <tr>
+      <td>"다 됐어요"라는데 일부 기능 누락</td>
+      <td>요구사항이 길어 일부 흘림</td>
+      <td>요구사항을 번호 매겨 다시 주고, "각 항목별로 구현했는지 ✓/✗ 표시 후 ✗는 이유까지"</td>
+    </tr>
+    <tr>
+      <td>같은 버그를 계속 반복</td>
+      <td>AI가 같은 가정으로 같은 길을 감</td>
+      <td>"이 버그를 일으키는 가능한 원인 5가지를 가능성 순으로 나열. 그 다음 가장 가능성 낮은 것부터 검증법 알려줘."</td>
+    </tr>
+    <tr>
+      <td>UI가 "AI 티" 난다</td>
+      <td>레퍼런스 부재</td>
+      <td>좋아하는 사이트 스크린샷 2장 첨부 + "이런 톤으로 다시"</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>"왜?"를 세 번 물어라</h3>
+<p>AI가 짠 코드 중 한 줄이라도 "왜 이렇게 했는지" 모르겠으면 절대 넘어가지 마라. 그 한 줄이 나중에 가장 큰 버그를 낸다. 이렇게 묻는다:</p>
+<blockquote><p>17번째 줄의 <code>setTimeout(fn, 0)</code>은 왜 필요해? 빼면 어떤 문제가 생겨? 같은 효과를 내는 더 명확한 방법은?</p></blockquote>
+</section>
+
+<section id="checklist">
+<h2>7. 체크리스트 — 출시 전 마지막 점검</h2>
+
+<h3>기능 점검</h3>
+<ul class="checklist">
+  <li>스펙의 입출력이 모두 동작하는가</li>
+  <li>"안 할 것 (Non-goals)"이 정말 안 들어갔는가 (AI가 자주 슬쩍 추가함)</li>
+  <li>빈 값 / 비정상 값 / 한글·이모지 / 매우 큰 입력 4종 테스트했는가</li>
+  <li>실패 시 사용자에게 보이는 메시지가 사람 말 같은가 ("Error 500" 금지)</li>
+</ul>
+
+<h3>코드 위생</h3>
+<ul class="checklist">
+  <li>매직 넘버·하드코딩된 문자열이 상수로 빠져 있는가</li>
+  <li>API 키 같은 비밀이 코드에 박혀 있지 않은가</li>
+  <li>외부 라이브러리는 실제로 존재하고 활발히 유지보수되는가</li>
+  <li>주석이 코드를 그냥 따라 쓰지 않고 "왜"를 설명하는가</li>
+</ul>
+
+<h3>그래픽 도구 한정</h3>
+<ul class="checklist">
+  <li>한국어·영어·이모지·긴 제목 4가지 케이스가 모두 깨지지 않는가</li>
+  <li>다운로드된 PNG가 미리보기와 일치하는가 (해상도·여백)</li>
+  <li>최소 3가지 변형이 각각 보기 좋은가</li>
+</ul>
+
+<h3>사용자 인계</h3>
+<ul class="checklist">
+  <li>처음 쓰는 사람이 README만 보고 5분 안에 동작시킬 수 있는가</li>
+  <li>예제 입력·예제 출력이 1세트 이상 포함되어 있는가</li>
+  <li>"이 도구가 안 하는 것"이 README 상단에 적혀 있는가</li>
+</ul>
+</section>
+
+<hr class="soft">
+
+<p style="margin-top:32px;"><strong>마지막 한마디.</strong> AI로 도구 만들기에서 가장 큰 함정은 <em>한 번에 끝내려는 욕심</em>이다. 한 사이클을 돌리고, 결과를 보고, 다음 한 가지만 고치는 — 이 리듬이 결국 가장 빠르다. 본 가이드의 워크플로우와 패턴들도 처음엔 번거롭게 느껴질 수 있지만, 두세 번 적용해보면 "AI 없이는 못 돌아가지만 AI에 끌려다니지도 않는" 자기만의 작업 루틴이 생긴다.</p>
+
+<footer class="end">
+🐻 AI Tool Building Guide · 2026
+</footer>
+
+</div>
+</body>
+</html>
